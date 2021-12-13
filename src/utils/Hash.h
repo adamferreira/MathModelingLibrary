@@ -44,7 +44,7 @@ hash_t combine_hash(const T& a, const T& b) {
     mask = (hash_t(1) << 8*sizeof(hash_t)/2) - 1;
     // First half (from left) of the hash of a
     // Second hasf (from left) of the hash of b
-    return (a & ~mask) & (b & mask);
+    return (hasher(a) & ~mask) & (hasher(b) & mask);
 }
 
 } /* mml */
