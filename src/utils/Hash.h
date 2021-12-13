@@ -37,15 +37,23 @@ struct std::hash<UniqueObject>
 };
 
 template <class T = UniqueObject>
-hash_t combine_hash(const T& a, const T& b) {
+inline hash_t combine_hash(const T& a, const T& b) {
     std::hash<T> hasher;
-    hash_t mask;
     // Assume hash_t is 64 bits then mask is 00..<32>...01...<32>...1
-    mask = (hash_t(1) << 8*sizeof(hash_t)/2) - 1;
+    hash_t mask = (hash_t(1) << 8*sizeof(hash_t)/2) - 1;
     // First half (from left) of the hash of a
     // Second hasf (from left) of the hash of b
     return (hasher(a) & ~mask) & (hasher(b) & mask);
 }
+
+using CombinedHash = std::pair<UniqueObject, UniqueObject>;
+
+struct std::hash<CombinedHash>
+{
+    hash_t operator()(const CombinedHash& o) {
+        return combine_hash(o.first, o.second);
+    }
+};
 
 } /* mml */
 #endif
