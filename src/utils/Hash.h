@@ -22,8 +22,9 @@ class UniqueObject {
 private:
     hash_t _unique_id;
 public:
+    UniqueObject::UniqueObject() : _unique_id(0) {}
     UniqueObject::UniqueObject(hash_t given_id) : _unique_id(given_id) {}
-    inline hash_t id() const { return _unique_id; }
+    inline hash_t id() const { return this->_unique_id; }
 };
 
 // Custom specialization of std::hash can be injected in namespace std
@@ -47,12 +48,29 @@ inline hash_t combine_hash(const T& a, const T& b) {
 }
 
 using CombinedHash = std::pair<UniqueObject, UniqueObject>;
-
+template <>
 struct std::hash<CombinedHash>
 {
     hash_t operator()(const CombinedHash& o) {
         return combine_hash(o.first, o.second);
     }
+};
+
+class CombinedHashGenerator : public UniqueObject {
+    /* TODO delete copy constructor */
+    inline hash_t
+    next_hash(hash_t parent_hash) {
+        return mml::combine_hash(parent_hash, ++this->_unique_id);
+    }
+};
+
+class UniqueObjectFactory : public CombinedHashGenerator {
+    template<class Parent = UniqueObject, class Children = UniqueObject>
+    inline Children
+    make_from(const Parent& p) {
+        return Children(this->next_hash(p.id()));
+    }
+
 };
 
 } /* mml */
