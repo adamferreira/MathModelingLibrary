@@ -3,7 +3,7 @@
 #include <cstddef> // std::size_t
 #include <functionnal> // std::hash
 
-namespace mml {
+namespace mml::hash {
 
 using hash_t = std::size_t;
 
@@ -37,15 +37,36 @@ struct std::hash<UniqueObject>
     }
 };
 
+inline hash_t combine(hash_t a, hash_t b) {
+    // Assume hash_t is 64 bits then mask is 00..<32>...01...<32>...1
+    hash_t mask = (hash_t(1) << 8*sizeof(hash_t)/2) - 1;
+    // Second half (from left) of the hash of a
+    // Second half (from left) of the hash of b
+    return (a << 8*sizeof(hash_t)/2) & mask) & (b & mask);
+}
+
 template <class T = UniqueObject>
 inline hash_t combine_hash(const T& a, const T& b) {
     std::hash<T> hasher;
-    // Assume hash_t is 64 bits then mask is 00..<32>...01...<32>...1
-    hash_t mask = (hash_t(1) << 8*sizeof(hash_t)/2) - 1;
-    // First half (from left) of the hash of a
-    // Second hasf (from left) of the hash of b
-    return (hasher(a) & ~mask) & (hasher(b) & mask);
+    return mml::combine(hasher(a), hasher(b));
 }
+
+std::pair<hash_t, hash_t> extract(hash_t);
+
+class CombinedHashGenerator {
+private:
+    hash_t _base_hash;
+    hash_t _hash_cpt;
+public:
+    CombinedHashGenerator(hast_t base) : _base_hash(base), _hash_cpt(0) {} 
+
+    /* TODO delete copy constructor ? */
+    inline hash_t
+    next_hash() {
+        return combine_hash(_base_hash, ++this->_hash_cpt);
+    }
+};
+
 
 using CombinedHash = std::pair<UniqueObject, UniqueObject>;
 template <>
@@ -56,21 +77,22 @@ struct std::hash<CombinedHash>
     }
 };
 
-class CombinedHashGenerator : public UniqueObject {
-    /* TODO delete copy constructor */
-    inline hash_t
-    next_hash(hash_t parent_hash) {
-        return mml::combine_hash(parent_hash, ++this->_unique_id);
-    }
-};
-
+template<class Parent = UniqueObject>
 class UniqueObjectFactory : public CombinedHashGenerator {
-    template<class Parent = UniqueObject, class Children = UniqueObject>
+public:
+    UniqueObjectFactory(const Parent& p) : CombinedHashGenerator(p.id()) {}    
+
+    template<class Children = UniqueObject>
     inline Children
-    make_from(const Parent& p) {
-        return Children(this->next_hash(p.id()));
+    make() {
+        return Children(this->next_hash());
     }
 
+    template<class Children = UniqueObject>
+    inline Children
+    make(hash_t fixed_hash) {
+        return Children(fixed_hash);
+    }
 };
 
 } /* mml */
