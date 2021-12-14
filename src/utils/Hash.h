@@ -28,7 +28,7 @@ hash_t combine(hash_t a, hash_t b) {
 }
 
 inline
-std::pair<hash_t, hash_t> extract(hash_t h) {
+auto extract(hash_t h) {
     // Assume hash_t is 64 bits then mask is 00..<32>...01...<32>...1
     hash_t mask = (hash_t(1) << 8*sizeof(hash_t)/2) - 1;
     return std::make_pair(((h << 8*sizeof(hash_t)/2) & mask), h & mask);
@@ -36,14 +36,14 @@ std::pair<hash_t, hash_t> extract(hash_t h) {
 
 template <class T = UniqueObject>
 inline 
-hash_t combine(const T& a, const T& b) {
+auto combine(const T& a, const T& b) {
     std::hash<T> hasher;
     return combine(hasher(a), hasher(b));
 }
 
 template <class T = UniqueObject>
 inline 
-hash_t extract(const T& a) {
+auto extract(const T& a) {
     return extract(std::hash<T>{}(a));
 }
 
@@ -76,16 +76,17 @@ public:
     Children make() {
         return Children(this->next());
     }
+
 private:
     template<class Children = OwnedObject>
     inline 
-    Children make(hash_t fixed_hash) {
+    Children make(hash_t fixed_hash) const {
         return Children(fixed_hash);
     }
 
     template<class Children = OwnedObject>
     inline 
-    Children make(const Parent& p) {
+    Children make(const Parent& p) const {
         return this->make(std::hash<Parent>{}(p));
     }
 };
