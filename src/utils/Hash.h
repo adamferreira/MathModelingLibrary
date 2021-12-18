@@ -1,22 +1,14 @@
 #ifndef __MML_HASH
 #define __MML_HASH
-#include <cstddef> // std::size_t
 #include <functional> // std::hash
+#include <utility> // std::make_pair
+
+#include "Types.h"
+#include "Object.h"
+
+using mml::types::hash_t;
 
 namespace mml::hash {
-
-using hash_t = std::size_t;
-
-// An UniqueObject is an object with a unique id (hash) within each instance of a programm
-class UniqueObject {
-private:
-    hash_t _unique_id;
-public:
-    UniqueObject() : _unique_id(0) {}
-    UniqueObject(hash_t given_id) : _unique_id(given_id) {}
-    inline hash_t id() const { return this->_unique_id; }
-};
-
 
 inline 
 hash_t combine(hash_t a, hash_t b) {
@@ -108,9 +100,9 @@ concept Hashable = requires(T a) {
 // Compatible with concept Hashable
 namespace std {
     template <> 
-    struct hash<mml::hash::UniqueObject>
+    struct hash<mml::UniqueObject>
     {
-        mml::hash::hash_t operator()(const mml::hash::UniqueObject& o) const noexcept {
+        mml::types::hash_t operator()(const mml::UniqueObject& o) const noexcept {
             return o.id();
         }
     };
