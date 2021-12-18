@@ -17,8 +17,8 @@ target_include_directories(utils
 install(FILES ${UTILS_HEADER_FILES} DESTINATION ${installincludedir}/utils)
 install(TARGETS utils
     EXPORT mml
-    LIBRARY DESTINATION ${installlibdir}
-    ARCHIVE DESTINATION ${installlibdir}
-    RUNTIME DESTINATION ${installbindir}
+    #LIBRARY DESTINATION ${installlibdir}
+    #ARCHIVE DESTINATION ${installlibdir}
+    #RUNTIME DESTINATION ${installbindir}
     INCLUDES DESTINATION ${installincludedir}/utils
 )
